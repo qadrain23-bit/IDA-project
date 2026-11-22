@@ -1,0 +1,13 @@
+# data is too big for GitHub (sales file is 218 MB) - see README "Getting the data"
+data/source/*.csv
+data/landing/*
+data/stream_in/*
+data/archive/*
+data/generated/*
+data/warehouse/*
+!data/**/.gitkeep
+__pycache__/
+*.pyc
+.env
+logs/
+.venv/
