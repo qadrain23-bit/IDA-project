@@ -46,7 +46,7 @@ flowchart LR
 **Needs:** Docker Desktop (about 4 GB RAM free).
 
 1. **Add the data.** The source CSVs are too big for GitHub (the sales file is 218 MB), so they are git-ignored. Copy the 7 files into `data/source/` with their original names (`01_master_data.csv` … `07_iot_streaming_data.csv`).
-2. **Start everything:**
+2. **Start everything** (Linux only: first run `echo "AIRFLOW_UID=$(id -u)" > .env`):
    ```bash
    docker compose up -d --build
    ```

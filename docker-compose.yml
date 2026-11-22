@@ -16,6 +16,7 @@ x-pipeline-env: &pipeline-env
   STREAM_EVENTS_PER_SECOND: "400"
 
 x-airflow-common: &airflow-common
+  user: "${AIRFLOW_UID:-50000}:0"   # on Linux put AIRFLOW_UID=$(id -u) in .env so mounted folders stay writable
   build:
     context: .
     dockerfile: Dockerfile.airflow
@@ -74,6 +75,7 @@ services:
         condition: service_completed_successfully
 
   ingest-api:
+    user: "${AIRFLOW_UID:-50000}:0"
     build:
       context: .
       dockerfile: Dockerfile.airflow
@@ -89,6 +91,7 @@ services:
 
   # optional 24/7 watcher: reacts to new files instantly and triggers the ingestion DAGs
   file-watcher:
+    user: "${AIRFLOW_UID:-50000}:0"
     build:
       context: .
       dockerfile: Dockerfile.airflow
