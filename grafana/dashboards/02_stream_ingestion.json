@@ -1,0 +1,412 @@
+{
+  "uid": "02_stream_ingestion",
+  "title": "SDI | Streaming Ingestion Monitoring",
+  "tags": [
+    "pharma",
+    "phase1",
+    "observability"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "10s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Throughput - latest run (events/s)",
+      "type": "stat",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT throughput_eps FROM ops.stream_run ORDER BY load_id DESC LIMIT 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 2,
+      "title": "Avg End-to-End Latency - latest run (s)",
+      "type": "stat",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT avg_latency_s FROM ops.stream_run ORDER BY load_id DESC LIMIT 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 3,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 3,
+      "title": "Malformed Events (all runs)",
+      "type": "stat",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT sum(events_malformed) AS malformed FROM ops.stream_run"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 4,
+      "title": "Dropped Events (all runs)",
+      "type": "stat",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT sum(events_dropped) AS dropped FROM ops.stream_run"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 5,
+      "title": "Stream Throughput (events per second) over the run - one line per refresh",
+      "type": "trend",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 24,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT second_of_run, sum(events_loaded) FILTER (WHERE refresh_id = 1) AS refresh_1, sum(events_loaded) FILTER (WHERE refresh_id = 2) AS refresh_2, sum(events_loaded) FILTER (WHERE refresh_id = 3) AS refresh_3, sum(events_loaded) FILTER (WHERE refresh_id = 4) AS refresh_4 FROM (SELECT r.refresh_id, w.events_loaded, extract(epoch FROM w.window_start - min(w.window_start) OVER (PARTITION BY w.load_id))::int AS second_of_run FROM ops.stream_window w JOIN ops.stream_run r USING (load_id)) x GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "showPoints": "always",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "xField": "second_of_run",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "End-to-End Latency per second of the run (avg, s)",
+      "type": "trend",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT second_of_run, sum(avg_latency_s) FILTER (WHERE refresh_id = 1) AS refresh_1, sum(avg_latency_s) FILTER (WHERE refresh_id = 2) AS refresh_2, sum(avg_latency_s) FILTER (WHERE refresh_id = 3) AS refresh_3, sum(avg_latency_s) FILTER (WHERE refresh_id = 4) AS refresh_4 FROM (SELECT r.refresh_id, w.avg_latency_s, extract(epoch FROM w.window_start - min(w.window_start) OVER (PARTITION BY w.load_id))::int AS second_of_run FROM ops.stream_window w JOIN ops.stream_run r USING (load_id)) x GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "showPoints": "always",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "xField": "second_of_run",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Malformed Events per Run by Reason",
+      "type": "barchart",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 13,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT 'Refresh ' || s.refresh_id || ': ' || r.reason AS reason, count(*) AS events FROM staging.rejected_rows r JOIN ops.stream_run s USING (load_id) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "xTickLabelRotation": 0,
+        "barWidth": 0.8,
+        "groupWidth": 0.7
+      }
+    },
+    {
+      "id": 8,
+      "title": "Stream Runs",
+      "type": "table",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 21,
+        "w": 24,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT load_id, refresh_id, file_name, events_sent, events_loaded, events_malformed, events_dropped, duration_s, throughput_eps, avg_latency_s, p95_latency_s, status FROM ops.stream_run ORDER BY load_id DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    }
+  ],
+  "links": [
+    {
+      "title": "Other dashboards",
+      "type": "dashboards",
+      "tags": [
+        "pharma"
+      ],
+      "asDropdown": true
+    }
+  ]
+}

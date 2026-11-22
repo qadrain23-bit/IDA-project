@@ -1,0 +1,415 @@
+{
+  "uid": "01_batch_ingestion",
+  "title": "SDI | Batch Ingestion Monitoring",
+  "tags": [
+    "pharma",
+    "phase1",
+    "observability"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "10s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Batch Success Rate (%)",
+      "type": "stat",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT round(100.0 * count(*) FILTER (WHERE status = 'SUCCESS') / nullif(count(*), 0), 1) AS success_rate_pct FROM ops.batch_load_log"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 2,
+      "title": "Files Loaded",
+      "type": "stat",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT count(*) AS files FROM ops.batch_load_log"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 3,
+      "title": "Rows Loaded",
+      "type": "stat",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT sum(rows_loaded) AS rows_loaded FROM ops.batch_load_log"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 4,
+      "title": "Rows Rejected by Validation",
+      "type": "stat",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT sum(rows_rejected) AS rows_rejected FROM ops.batch_load_log"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 5,
+      "title": "Batch Load Duration (s) per Source File",
+      "type": "barchart",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 12,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT file_name, duration_s FROM ops.batch_load_log WHERE status = 'SUCCESS' ORDER BY duration_s DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "xTickLabelRotation": 0,
+        "barWidth": 0.8,
+        "groupWidth": 0.7
+      }
+    },
+    {
+      "id": 6,
+      "title": "Rows Processed per Batch (loaded vs rejected)",
+      "type": "barchart",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 12,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT 'R' || refresh_id || ' ' || source_key AS batch, rows_loaded, rows_rejected FROM ops.batch_load_log ORDER BY load_id"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "scaleDistribution": {
+              "type": "log",
+              "log": 10
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "normal",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "xTickLabelRotation": 0,
+        "barWidth": 0.8,
+        "groupWidth": 0.7
+      }
+    },
+    {
+      "id": 7,
+      "title": "Rejected Rows by Reason",
+      "type": "barchart",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT r.source_key || ': ' || r.reason AS reason, count(*) AS rows FROM staging.rejected_rows r JOIN ops.batch_load_log b USING (load_id) GROUP BY 1 ORDER BY 2 DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "xTickLabelRotation": 0,
+        "barWidth": 0.8,
+        "groupWidth": 0.7
+      }
+    },
+    {
+      "id": 8,
+      "title": "Batch Load Log",
+      "type": "table",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 14,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT load_id, refresh_id, source_key, file_name, file_size_mb, rows_read, rows_loaded, rows_rejected, duration_s, round(rows_loaded / nullif(duration_s, 0)) AS rows_per_sec, status, started_at FROM ops.batch_load_log ORDER BY load_id DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    }
+  ],
+  "links": [
+    {
+      "title": "Other dashboards",
+      "type": "dashboards",
+      "tags": [
+        "pharma"
+      ],
+      "asDropdown": true
+    }
+  ]
+}

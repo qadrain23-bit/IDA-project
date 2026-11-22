@@ -1,0 +1,409 @@
+{
+  "uid": "04_query_performance",
+  "title": "SDI | Query Layer Performance",
+  "tags": [
+    "pharma",
+    "phase1",
+    "observability"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "10s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Queries Executed (all time)",
+      "type": "stat",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT count(*) AS queries FROM ops.query_log"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 2,
+      "title": "Query Error Rate (%)",
+      "type": "stat",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT round(100.0 * count(*) FILTER (WHERE status = 'FAILED') / nullif(count(*), 0), 2) AS error_rate_pct FROM ops.query_log"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 3,
+      "title": "Avg Time - star-schema queries (ms)",
+      "type": "stat",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT round(avg(duration_ms), 2) AS ms FROM ops.query_log WHERE variant = 'base' AND status = 'SUCCESS'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 4,
+      "title": "Avg Time - optimized queries (ms)",
+      "type": "stat",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT round(avg(duration_ms), 2) AS ms FROM ops.query_log WHERE variant = 'optimized' AND status = 'SUCCESS'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 5,
+      "title": "Average Query Execution Time (ms) per Dashboard Widget",
+      "type": "barchart",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 24,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT widget, round(avg(duration_ms) FILTER (WHERE variant = 'base'), 2) AS base_star_schema_ms, round(avg(duration_ms) FILTER (WHERE variant = 'optimized'), 2) AS optimized_ms FROM ops.query_log WHERE status = 'SUCCESS' GROUP BY widget ORDER BY base_star_schema_ms DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "vertical",
+        "showValue": "auto",
+        "stacking": "none",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "xTickLabelRotation": 0,
+        "barWidth": 0.8,
+        "groupWidth": 0.7
+      }
+    },
+    {
+      "id": 6,
+      "title": "Daily Active Query Count",
+      "type": "barchart",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT to_char(run_at, 'YYYY-MM-DD') AS day, count(*) AS queries FROM ops.query_log GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "vertical",
+        "showValue": "auto",
+        "stacking": "none",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "xTickLabelRotation": 0,
+        "barWidth": 0.8,
+        "groupWidth": 0.7
+      }
+    },
+    {
+      "id": 7,
+      "title": "Avg Execution Time per Refresh (ms)",
+      "type": "barchart",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 14,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT 'Refresh ' || refresh_id AS refresh, round(avg(duration_ms) FILTER (WHERE variant = 'base'), 2) AS base_ms, round(avg(duration_ms) FILTER (WHERE variant = 'optimized'), 2) AS optimized_ms FROM ops.query_log WHERE status = 'SUCCESS' GROUP BY refresh_id ORDER BY refresh_id"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "vertical",
+        "showValue": "auto",
+        "stacking": "none",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "xTickLabelRotation": 0,
+        "barWidth": 0.8,
+        "groupWidth": 0.7
+      }
+    },
+    {
+      "id": 8,
+      "title": "Latest Query Runs",
+      "type": "table",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 14,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT run_at, refresh_id, widget, variant, duration_ms, rows_returned, status, error_message FROM ops.query_log ORDER BY query_run_id DESC LIMIT 50"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    }
+  ],
+  "links": [
+    {
+      "title": "Other dashboards",
+      "type": "dashboards",
+      "tags": [
+        "pharma"
+      ],
+      "asDropdown": true
+    }
+  ]
+}

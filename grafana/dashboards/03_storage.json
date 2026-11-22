@@ -1,0 +1,417 @@
+{
+  "uid": "03_storage",
+  "title": "SDI | Storage & Staging Monitoring",
+  "tags": [
+    "pharma",
+    "phase1",
+    "observability"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "10s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Rows in Staging (Postgres)",
+      "type": "stat",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT sum(row_count) AS rows FROM ops.storage_snapshot WHERE layer = 'staging_postgres' AND snapshot_at = (SELECT max(snapshot_at) FROM ops.storage_snapshot WHERE layer = 'staging_postgres')"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 2,
+      "title": "Rows in Data Mart (DuckDB)",
+      "type": "stat",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT sum(row_count) AS rows FROM ops.storage_snapshot WHERE layer = 'mart_duckdb' AND snapshot_at = (SELECT max(snapshot_at) FROM ops.storage_snapshot WHERE layer = 'mart_duckdb')"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 3,
+      "title": "Postgres Database Size (MB)",
+      "type": "stat",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT round(pg_database_size(current_database()) / 1e6, 1) AS mb"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 4,
+      "title": "DuckDB Mart File Size (MB)",
+      "type": "stat",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT sum(size_mb) AS mb FROM ops.storage_snapshot WHERE layer = 'mart_duckdb' AND snapshot_at = (SELECT max(snapshot_at) FROM ops.storage_snapshot WHERE layer = 'mart_duckdb')"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 5,
+      "title": "Storage Breakdown - % of staging rows by source domain",
+      "type": "piechart",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 8,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT source_domain, row_count FROM ops.storage_snapshot WHERE layer = 'staging_postgres' AND snapshot_at = (SELECT max(snapshot_at) FROM ops.storage_snapshot WHERE layer = 'staging_postgres') ORDER BY row_count DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": true
+        },
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "percent",
+            "value"
+          ]
+        },
+        "displayLabels": [
+          "percent"
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "title": "Storage Footprint (MB) per staging table",
+      "type": "barchart",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 4,
+        "w": 8,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT table_name, size_mb FROM ops.storage_snapshot WHERE layer = 'staging_postgres' AND snapshot_at = (SELECT max(snapshot_at) FROM ops.storage_snapshot WHERE layer = 'staging_postgres') ORDER BY size_mb DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "xTickLabelRotation": 0,
+        "barWidth": 0.8,
+        "groupWidth": 0.7
+      }
+    },
+    {
+      "id": 7,
+      "title": "Row Count Growth per Refresh (staging)",
+      "type": "barchart",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 4,
+        "w": 8,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT 'Refresh ' || refresh_id AS refresh, sum(row_count) AS rows FROM (SELECT DISTINCT ON (refresh_id, table_name) * FROM ops.storage_snapshot WHERE layer = 'staging_postgres' AND refresh_id IS NOT NULL ORDER BY refresh_id, table_name, snapshot_at DESC) s GROUP BY refresh_id ORDER BY refresh_id"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "vertical",
+        "showValue": "auto",
+        "stacking": "none",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "xTickLabelRotation": 0,
+        "barWidth": 0.8,
+        "groupWidth": 0.7
+      }
+    },
+    {
+      "id": 8,
+      "title": "Date Coverage Span per Table (target: 2023-2025 fully present + new months)",
+      "type": "table",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pharma_pg"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 24,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pharma_pg"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT layer, table_name, source_domain, row_count, min_date, max_date, (max_date - min_date) AS span_days, distinct_months, CASE WHEN min_date <= DATE '2023-01-31' AND max_date >= DATE '2025-12-01' THEN 'OK' WHEN min_date IS NULL THEN '-' ELSE 'GAP' END AS coverage_2023_2025 FROM ops.storage_snapshot WHERE snapshot_at IN (SELECT max(snapshot_at) FROM ops.storage_snapshot GROUP BY layer) ORDER BY layer DESC, row_count DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    }
+  ],
+  "links": [
+    {
+      "title": "Other dashboards",
+      "type": "dashboards",
+      "tags": [
+        "pharma"
+      ],
+      "asDropdown": true
+    }
+  ]
+}
