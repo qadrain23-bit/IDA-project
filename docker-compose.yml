@@ -17,6 +17,7 @@ x-pipeline-env: &pipeline-env
 
 x-airflow-common: &airflow-common
   user: "${AIRFLOW_UID:-50000}:0"   # on Linux put AIRFLOW_UID=$(id -u) in .env so mounted folders stay writable
+  image: pharma-airflow:latest      # built once, reused by every service below
   build:
     context: .
     dockerfile: Dockerfile.airflow
@@ -76,9 +77,7 @@ services:
 
   ingest-api:
     user: "${AIRFLOW_UID:-50000}:0"
-    build:
-      context: .
-      dockerfile: Dockerfile.airflow
+    image: pharma-airflow:latest
     entrypoint: ["python", "-m", "uvicorn", "pipeline.api:app", "--host", "0.0.0.0", "--port", "8000"]
     environment: *pipeline-env
     volumes:
@@ -92,9 +91,7 @@ services:
   # optional 24/7 watcher: reacts to new files instantly and triggers the ingestion DAGs
   file-watcher:
     user: "${AIRFLOW_UID:-50000}:0"
-    build:
-      context: .
-      dockerfile: Dockerfile.airflow
+    image: pharma-airflow:latest
     entrypoint: ["python", "-m", "pipeline.watcher", "--daemon"]
     environment:
       <<: *pipeline-env
