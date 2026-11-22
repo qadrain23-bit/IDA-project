@@ -1,0 +1,15 @@
+apiVersion: 1
+datasources:
+  - name: Pharma DWH (Postgres ops)
+    uid: pharma_pg
+    type: grafana-postgresql-datasource
+    url: postgres:5432
+    user: grafana_reader
+    isDefault: true
+    secureJsonData:
+      password: grafana
+    jsonData:
+      database: pharma_dwh
+      sslmode: disable
+      postgresVersion: 1600
+      timescaledb: false
