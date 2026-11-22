@@ -1,0 +1,119 @@
+# Pharma Cold Chain DWH + BI pipeline - Phase 1 (SDI)
+# Start:  docker compose up -d --build      (first start takes a few minutes)
+# Airflow  http://localhost:8080   admin / admin
+# Grafana  http://localhost:3000   admin / admin
+# API      http://localhost:8000/docs
+x-pipeline-env: &pipeline-env
+  PG_HOST: postgres
+  PG_PORT: "5432"
+  PG_DB: pharma_dwh
+  PG_USER: pharma
+  PG_PASSWORD: pharma
+  PIPELINE_HOME: /opt/pipeline
+  PIPELINE_SRC: /opt/pipeline/src
+  PYTHONPATH: /opt/pipeline/src
+  INGEST_API_URL: http://ingest-api:8000
+  STREAM_EVENTS_PER_SECOND: "400"
+
+x-airflow-common: &airflow-common
+  build:
+    context: .
+    dockerfile: Dockerfile.airflow
+  environment:
+    <<: *pipeline-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "False"
+    AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth
+    AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL: "30"
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./src:/opt/pipeline/src
+    - ./data:/opt/pipeline/data
+    - ./logs:/opt/airflow/logs
+  depends_on:
+    postgres:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: pharma
+      POSTGRES_PASSWORD: pharma
+      POSTGRES_DB: pharma_dwh
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pharma -d pharma_dwh"]
+      interval: 5s
+      retries: 20
+
+  airflow-init:
+    <<: *airflow-common
+    entrypoint: /bin/bash
+    command: -c "airflow db migrate && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com || true"
+    restart: "no"
+
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    ports: ["8080:8080"]
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+  ingest-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    entrypoint: ["python", "-m", "uvicorn", "pipeline.api:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment: *pipeline-env
+    volumes:
+      - ./src:/opt/pipeline/src
+      - ./data:/opt/pipeline/data
+    ports: ["8000:8000"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # optional 24/7 watcher: reacts to new files instantly and triggers the ingestion DAGs
+  file-watcher:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    entrypoint: ["python", "-m", "pipeline.watcher", "--daemon"]
+    environment:
+      <<: *pipeline-env
+      AIRFLOW_API: http://airflow-webserver:8080/api/v1
+    volumes:
+      - ./src:/opt/pipeline/src
+      - ./data:/opt/pipeline/data
+    profiles: ["watcher"]
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/01_batch_ingestion.json
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    ports: ["3000:3000"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
