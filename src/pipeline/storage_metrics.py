@@ -38,7 +38,10 @@ def collect(refresh_id: int | None = None) -> list[tuple]:
                             FROM staging.{table}""")
             n, mb, dmin, dmax, months = cur.fetchone()
             rows.append((now, refresh_id, "staging_postgres", table, key, n, round(float(mb), 3), dmin, dmax, months))
-    total_duck_mb = os.path.getsize(DUCKDB_PATH) / 1e6 if DUCKDB_PATH.exists() else 0
+    if not DUCKDB_PATH.exists():  # first run: mart not built yet, staging metrics only
+        _save(rows)
+        return rows
+    total_duck_mb = os.path.getsize(DUCKDB_PATH) / 1e6
     con = duck_conn(read_only=True)
     try:
         counts = {}
@@ -62,9 +65,13 @@ def collect(refresh_id: int | None = None) -> list[tuple]:
             rows.append((now, refresh_id, "mart_duckdb", t, domain, counts[t], mb, dmin, dmax, months))
     finally:
         con.close()
+    _save(rows)
+    return rows
+
+
+def _save(rows):
     with pg_conn() as conn, conn.cursor() as cur:
         cur.executemany("INSERT INTO ops.storage_snapshot VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)", rows)
-    return rows
 
 
 if __name__ == "__main__":
