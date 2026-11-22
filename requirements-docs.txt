@@ -1,0 +1,8 @@
+# Only needed on your own computer to rebuild the PDF, Excel and dashboard previews
+# (scripts/build_*.py, scripts/render_dashboard_previews.py). Not used inside Docker.
+pandas
+duckdb
+psycopg2-binary
+openpyxl
+reportlab
+matplotlib
