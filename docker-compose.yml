@@ -47,7 +47,7 @@ services:
       POSTGRES_DB: pharma_dwh
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./docker:/docker-entrypoint-initdb.d:ro   # folder mount (a single-file mount breaks on Windows if the file is missing)
     ports: ["5432:5432"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U pharma -d pharma_dwh"]
