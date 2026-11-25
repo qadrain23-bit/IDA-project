@@ -18,6 +18,7 @@ x-pipeline-env: &pipeline-env
 x-airflow-common: &airflow-common
   user: "${AIRFLOW_UID:-50000}:0"   # on Linux put AIRFLOW_UID=$(id -u) in .env so mounted folders stay writable
   image: pharma-airflow:latest      # built once, reused by every service below
+  restart: unless-stopped           # comes back by itself if Postgres restarts underneath it
   build:
     context: .
     dockerfile: Dockerfile.airflow
@@ -41,6 +42,7 @@ x-airflow-common: &airflow-common
 services:
   postgres:
     image: postgres:16
+    restart: unless-stopped
     environment:
       POSTGRES_USER: pharma
       POSTGRES_PASSWORD: pharma
@@ -78,6 +80,7 @@ services:
   ingest-api:
     user: "${AIRFLOW_UID:-50000}:0"
     image: pharma-airflow:latest
+    restart: unless-stopped
     pull_policy: never   # built locally by the airflow services
     entrypoint: ["python", "-m", "uvicorn", "pipeline.api:app", "--host", "0.0.0.0", "--port", "8000"]
     environment: *pipeline-env
@@ -105,6 +108,7 @@ services:
 
   grafana:
     image: grafana/grafana:11.3.0
+    restart: unless-stopped
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
