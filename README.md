@@ -2,6 +2,8 @@
 
 Intelligent Data Architectures, Fall 2026 · Milestone 1 (pipeline up to the query layer)
 
+**Group members:** Qadrain Qadir, Muhammad Alam
+
 An automated data-engineering pipeline, run by **Apache Airflow**, that:
 
 1. **generates** new monthly data for all 7 source files (oversampling layer)

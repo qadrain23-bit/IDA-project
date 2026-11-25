@@ -65,7 +65,7 @@ ws.title = "About"
 lines = [
     ("Phase 1 - Sales & Demand Intelligence (SDI) Data Mart", True, 14),
     ("Intelligent Data Architectures, Fall 2026 - Pharma Cold Chain DWH + BI pipeline", False, 10),
-    ("Group members: ____________________", False, 10),
+    ("Group members: Qadrain Qadir, Muhammad Alam", False, 10),
     ("", False, 10),
     ("What this workbook contains (one tab each):", True, 10),
     ("Bus Matrix - which dimensions each fact table uses (conformed dimensions for the later fact constellation)", False, 10),

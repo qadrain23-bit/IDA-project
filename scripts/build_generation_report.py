@@ -76,7 +76,7 @@ st1, st2 = RUN["stream_runs"]
 story = [
     Paragraph("Data Generation (Oversampling) Methodology - Phase 1, Sales &amp; Demand Intelligence", h1),
     Paragraph("Intelligent Data Architectures, Fall 2026 - Pharmaceutical Cold Supply Chain DWH + BI pipeline. "
-              "Group members: ____________________", small),
+              "Group members: Qadrain Qadir, Muhammad Alam", small),
     Paragraph("1. Goal", h2),
     Paragraph("The warehouse must be seen <b>refreshing twice</b> with new data while keeping all history. The generator "
               "(<font face='Courier'>src/pipeline/generator.py</font>, run by the Airflow DAG "
