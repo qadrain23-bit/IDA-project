@@ -38,7 +38,9 @@ flowchart LR
 | `grafana/` | Datasource + 4 dashboards, provisioned automatically (`build_dashboards.py` builds the JSON) |
 | `docs/Data_Generation_Report.pdf` | 2-page report: data generation logic and statistics |
 | `docs/Phase1_SDI_Data_Mart.xlsx` | Phase 1 Excel file: bus matrix, data dictionary, source-to-target mapping, validation rules, refresh log, KPI results, query performance |
-| `docs/dashboards/*.png` | Previews of the 4 dashboards from our test run |
+| `docs/laptop_run_results.json` | All monitoring figures from the real laptop run (used by the PDF and Excel) |
+| `docs/dashboards/01_batch_ingestion_laptop_run.png` | Screenshot of the live batch dashboard from the laptop run |
+| `docs/dashboards/0*_*.png` (others) | Layout previews drawn on our Linux development machine, **not** laptop results |
 | `docker-compose.yml` | Postgres 16, Airflow 2.11 (webserver + scheduler), ingestion API, Grafana 11 |
 
 ## How to run it
@@ -92,16 +94,22 @@ Loads are **incremental**, using a watermark per source in `ops.etl_watermark`, 
 9 dashboard queries, each in two versions: **base** (star-schema joins) and **optimized**. The optimizations are summary tables `agg_sales_monthly` / `agg_demand_monthly` (DuckDB has no materialized views, so these play that role), a date-sorted fact (zone maps), ART indexes, and year/month parquet partitions. Both versions are checked to return identical results. Each runs 5× per refresh, and every run is logged to `ops.query_log` (time, rows, success/failure).
 
 ## The 4 monitoring dashboards (what they tell)
-1. **Batch Ingestion:** success rate, rows loaded and rejected, load time per file (the 500k-row sales file is clearly the slowest at about 22 s), and rejected rows by reason.
-2. **Streaming Ingestion:** throughput per second for each refresh run. It stays flat at about 600 events/s, which shows the stream is stable. End-to-end latency is about 0.06 s per event. Malformed events are split by reason, and 0 events were dropped.
-3. **Storage:** rows split by source domain (sales is 53% of rows), table sizes, row growth per refresh, and a date-coverage check showing 2023–2025 fully present plus the new months.
-4. **Query Performance:** average time per widget, star schema vs optimized. Summary tables make the sales queries about 1.8–5× faster (at this data size the partition scan and the small demand query do not get faster). Error rate is 0%.
+Numbers below are from our real run on the team laptop (Windows + Docker Desktop, 26 Nov 2026). The full figures are in `docs/laptop_run_results.json`, and a screenshot of the live batch dashboard is in `docs/dashboards/01_batch_ingestion_laptop_run.png`.
 
-## Results of our test run (initial load + 2 refreshes)
-- 934,448 historical rows loaded, then 20,299 (Jan 2026) and 20,214 (Feb 2026) new rows
-- 109 deliberately broken rows were injected, and all 109 were rejected by validation
-- `fact_sales` holds 514,139 rows and `fact_hospital_demand` holds 28,724; `dim_medicine` has 71 rows (63 medicines + 8 SCD2 versions)
-- Average query time: 6.8 ms (star schema) vs 3.5 ms (optimized)
+1. **Batch Ingestion:** success rate, rows loaded and rejected, load time per file, and rejected rows by reason. The 500,000-row sales file is clearly the slowest at **63 s**, followed by IoT (31 s) and warehouse (15 s). The success rate shows **86.4% (19 of 22 loads)**. The 3 failures are real: the hospital file failed 3 times in the initial load because of a pandas-version bug, then loaded fine after the fix. This shows the success-rate KPI catching an actual problem.
+2. **Streaming Ingestion:** throughput per second for each refresh run: **324 events/s** (refresh 1) and **372 events/s** (refresh 2). Average end-to-end delay was **0.07–0.08 s** per event (p95 about 0.11 s). 28 malformed events were caught in each refresh, and **0 events were dropped**.
+3. **Storage:** after refresh 2, staging holds **974,852 rows (480 MB)** and the DuckDB mart **577,746 rows (71 MB)**. Sales is 53% of staging rows. There's also row growth per refresh, and a date-coverage check showing 2023–2025 fully present plus Jan and Feb 2026.
+4. **Query Performance:** 360 query runs, **0% error rate**. Summary tables made 8 of the 9 widget queries faster, by **1.2–5.1×** (e.g. KPI cards 17.0 → 3.4 ms, monthly revenue trend 13.9 → 3.2 ms). The exception is the parquet **partition scan**: it was **40× slower** (5 → 205 ms), because reading parquet files from a Windows folder mounted into Docker is slow. On our Linux test machine it was only about 1.6× slower. At this data size, the native DuckDB table beats partitioned parquet.
+
+## Results of the laptop run (initial load + 2 refreshes)
+| | Rows loaded | Rows rejected | `fact_sales` | `fact_hospital_demand` | `dim_medicine` rows |
+|---|---|---|---|---|---|
+| Refresh 0 (2023–2025) | 934,448 | 0 | 500,000 | 27,216 | 63 |
+| Refresh 1 (Jan 2026) | 20,244 batch + 7,086 stream | 55 | 507,086 | 27,970 | 67 |
+| Refresh 2 (Feb 2026) | 20,160 batch + 7,053 stream | 54 | 514,139 | 28,724 | 71 |
+
+- **109 deliberately broken rows** were injected (55 + 54), and validation rejected exactly those 109.
+- `dim_medicine` grows by 4 rows per refresh. These are the SCD Type 2 versions created by the price and safety-stock changes; sales in each month link to the price valid on the sale date.
 
 ## Assumptions
 - Channel groups: `Ecommerce` → E-commerce; physical sale at a `Hospital Pharmacy` → Hospital; everything else → Retail.
@@ -114,7 +122,7 @@ Loads are **incremental**, using a watermark per source in `ops.etl_watermark`, 
 ## Re-building the docs
 ```bash
 python grafana/build_dashboards.py              # dashboard JSON
-python scripts/render_dashboard_previews.py     # PNG previews (needs a finished run)
-python scripts/build_generation_report.py       # PDF report
-python scripts/build_phase1_excel.py            # Excel file
+python scripts/render_dashboard_previews.py     # layout previews from the local ops tables (development only)
+python scripts/build_generation_report.py       # PDF report (reads docs/laptop_run_results.json)
+python scripts/build_phase1_excel.py            # Excel file (reads docs/laptop_run_results.json)
 ```
