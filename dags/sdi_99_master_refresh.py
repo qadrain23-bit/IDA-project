@@ -18,7 +18,8 @@ STEPS = ["sdi_00_generate_data", "sdi_01_batch_ingestion", "sdi_02_stream_ingest
 
 @dag(dag_id="sdi_99_master_refresh", start_date=START, schedule=None, catchup=False,
      default_args={**DEFAULT_ARGS, "retries": 0}, tags=TAGS + ["master"], max_active_runs=1,
-     params={"refresh_id": Param(1, type="integer", minimum=0)}, doc_md=__doc__)
+     params={"refresh_id": Param(1, type="integer", minimum=0)}, doc_md=__doc__,
+     render_template_as_native_obj=True)   # pass refresh_id to child DAGs as a number, not text
 def master_refresh():
     prev = None
     for dag_id in STEPS:
