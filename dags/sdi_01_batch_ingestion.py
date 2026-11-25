@@ -45,6 +45,12 @@ def batch_ingestion():
         from pipeline.batch_ingest import ingest_file
         return ingest_file(path)
 
+    @task
+    def all_files_loaded():
+        """Leaf gate: if any file failed, this ends upstream_failed so the whole run is marked
+        FAILED (storage_metrics runs with all_done and would otherwise hide the failure)."""
+        return True
+
     @task(trigger_rule="all_done")
     def storage_metrics():
         from pipeline.storage_metrics import collect
@@ -54,7 +60,7 @@ def batch_ingestion():
     m = ingest_master(files)
     o = ingest_one.expand(path=others(files))
     wait_for_files >> files
-    m >> o >> storage_metrics()
+    m >> o >> [storage_metrics(), all_files_loaded()]
 
 
 batch_ingestion()
