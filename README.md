@@ -59,7 +59,7 @@ flowchart LR
 
 Keep the Grafana dashboards open during steps 4–5. They auto-refresh every 10 s, so you can see the numbers change live in the demo.
 
-Optional: `docker compose --profile watcher up -d file-watcher` starts a 24/7 watchdog daemon. It triggers the ingestion DAGs as soon as a file lands, including files uploaded through `POST /ingest/file`.
+Optional: `docker compose --profile watcher up -d file-watcher` starts a 24/7 watchdog daemon. It triggers the ingestion DAGs as soon as a file lands, including files uploaded through `POST /ingest/file?name=<file>.csv` (raw CSV as the request body).
 
 ## Layers
 

@@ -2,8 +2,10 @@
 
 Endpoints
   GET  /health                 -> liveness check
-  POST /ingest/file            -> upload a CSV; it is saved into the landing folder,
-                                  where the file-watcher / Airflow sensor picks it up
+  POST /ingest/file?name=X.csv -> send a CSV as the raw request body; it is saved into the
+                                  landing folder, where the file-watcher / Airflow sensor picks it up
+                                  e.g. curl -X POST --data-binary @05_x.csv "localhost:8000/ingest/file?name=05_x.csv"
+
   POST /stream/{source_key}    -> receive a micro-batch of JSON events (e.g. POS sales),
                                   validate each one and insert the valid ones into staging
 
@@ -11,9 +13,7 @@ Run:  uvicorn pipeline.api:app --host 0.0.0.0 --port 8000
 """
 from __future__ import annotations
 
-import shutil
-
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 
 from .config import LANDING_DIR, SOURCES, source_key_for_file
@@ -33,14 +33,16 @@ def health():
 
 
 @app.post("/ingest/file")
-def ingest_file(file: UploadFile = File(...)):
-    if not file.filename.endswith(".csv") or source_key_for_file(file.filename) is None:
-        raise HTTPException(400, "File name must start with one of the 7 source prefixes (01_ .. 07_) and be .csv")
-    tmp = LANDING_DIR / (file.filename + ".part")
+async def ingest_file(name: str, request: Request):
+    # raw body upload: no multipart dependency needed
+    if "/" in name or "\\" in name or not name.endswith(".csv") or source_key_for_file(name) is None:
+        raise HTTPException(400, "name must be a plain file name starting with 01_ .. 07_ and ending in .csv")
+    tmp = LANDING_DIR / (name + ".part")
     with tmp.open("wb") as fh:
-        shutil.copyfileobj(file.file, fh)
-    tmp.rename(LANDING_DIR / file.filename)  # atomic rename -> watcher never sees half a file
-    return {"saved_to": str(LANDING_DIR / file.filename)}
+        async for chunk in request.stream():
+            fh.write(chunk)
+    tmp.rename(LANDING_DIR / name)  # atomic rename -> watcher never sees half a file
+    return {"saved_to": str(LANDING_DIR / name)}
 
 
 @app.post("/stream/{source_key}")
