@@ -1,0 +1,76 @@
+{
+  "_about": "Results of the real pipeline run on the team laptop (Windows + Docker Desktop, Airflow 2.11), 26 Nov 2026, read from the ops/staging schemas in Postgres through Grafana. Refresh 0 = 2023-2025 history, refresh 1 = Jan 2026, refresh 2 = Feb 2026. The 3 FAILED hospital loads in refresh 0 were caused by a pandas-version bug (fixed in commit 'Fix hospital negative-quantity check on older pandas'); the file was then re-loaded successfully.",
+  "batch_loads": [
+    {"load_id": 1,  "refresh_id": 0, "source_key": "master",        "file_mb": 0.017,   "duration_s": 0.226,  "rows_read": 63,     "rows_loaded": 63,     "rows_rejected": 0,  "status": "SUCCESS"},
+    {"load_id": 2,  "refresh_id": 0, "source_key": "manufacturing", "file_mb": 0.2,     "duration_s": 0.554,  "rows_read": 561,    "rows_loaded": 561,    "rows_rejected": 0,  "status": "SUCCESS"},
+    {"load_id": 3,  "refresh_id": 0, "source_key": "delivery",      "file_mb": 0.404,   "duration_s": 0.534,  "rows_read": 999,    "rows_loaded": 999,    "rows_rejected": 0,  "status": "SUCCESS"},
+    {"load_id": 4,  "refresh_id": 0, "source_key": "warehouse",     "file_mb": 33.515,  "duration_s": 14.991, "rows_read": 112184, "rows_loaded": 112184, "rows_rejected": 0,  "status": "SUCCESS"},
+    {"load_id": 5,  "refresh_id": 0, "source_key": "sales",         "file_mb": 218.609, "duration_s": 63.245, "rows_read": 500000, "rows_loaded": 500000, "rows_rejected": 0,  "status": "SUCCESS"},
+    {"load_id": 6,  "refresh_id": 0, "source_key": "iot",           "file_mb": 75.229,  "duration_s": 30.838, "rows_read": 293425, "rows_loaded": 293425, "rows_rejected": 0,  "status": "SUCCESS"},
+    {"load_id": 7,  "refresh_id": 0, "source_key": "hospital",      "file_mb": 8.707,   "duration_s": 2.498,  "rows_read": null,   "rows_loaded": null,   "rows_rejected": null, "status": "FAILED"},
+    {"load_id": 8,  "refresh_id": 0, "source_key": "hospital",      "file_mb": 8.707,   "duration_s": 2.063,  "rows_read": null,   "rows_loaded": null,   "rows_rejected": null, "status": "FAILED"},
+    {"load_id": 9,  "refresh_id": 0, "source_key": "hospital",      "file_mb": 8.707,   "duration_s": 1.199,  "rows_read": null,   "rows_loaded": null,   "rows_rejected": null, "status": "FAILED"},
+    {"load_id": 14, "refresh_id": 0, "source_key": "hospital",      "file_mb": 8.707,   "duration_s": 2.018,  "rows_read": 27216,  "rows_loaded": 27216,  "rows_rejected": 0,  "status": "SUCCESS"},
+    {"load_id": 16, "refresh_id": 1, "source_key": "master",        "file_mb": 0.017,   "duration_s": 0.168,  "rows_read": 63,     "rows_loaded": 63,     "rows_rejected": 0,  "status": "SUCCESS"},
+    {"load_id": 17, "refresh_id": 1, "source_key": "manufacturing", "file_mb": 0.006,   "duration_s": 0.309,  "rows_read": 16,     "rows_loaded": 16,     "rows_rejected": 0,  "status": "SUCCESS"},
+    {"load_id": 18, "refresh_id": 1, "source_key": "delivery",      "file_mb": 0.012,   "duration_s": 0.299,  "rows_read": 27,     "rows_loaded": 27,     "rows_rejected": 0,  "status": "SUCCESS"},
+    {"load_id": 19, "refresh_id": 1, "source_key": "warehouse",     "file_mb": 1.215,   "duration_s": 0.837,  "rows_read": 4069,   "rows_loaded": 4061,   "rows_rejected": 8,  "status": "SUCCESS"},
+    {"load_id": 20, "refresh_id": 1, "source_key": "hospital",      "file_mb": 0.244,   "duration_s": 0.615,  "rows_read": 756,    "rows_loaded": 754,    "rows_rejected": 2,  "status": "SUCCESS"},
+    {"load_id": 21, "refresh_id": 1, "source_key": "iot",           "file_mb": 2.117,   "duration_s": 0.755,  "rows_read": 8254,   "rows_loaded": 8237,   "rows_rejected": 17, "status": "SUCCESS"},
+    {"load_id": 23, "refresh_id": 2, "source_key": "master",        "file_mb": 0.017,   "duration_s": 0.184,  "rows_read": 63,     "rows_loaded": 63,     "rows_rejected": 0,  "status": "SUCCESS"},
+    {"load_id": 24, "refresh_id": 2, "source_key": "manufacturing", "file_mb": 0.006,   "duration_s": 0.423,  "rows_read": 16,     "rows_loaded": 16,     "rows_rejected": 0,  "status": "SUCCESS"},
+    {"load_id": 25, "refresh_id": 2, "source_key": "hospital",      "file_mb": 0.244,   "duration_s": 0.517,  "rows_read": 756,    "rows_loaded": 754,    "rows_rejected": 2,  "status": "SUCCESS"},
+    {"load_id": 26, "refresh_id": 2, "source_key": "warehouse",     "file_mb": 1.214,   "duration_s": 0.759,  "rows_read": 4066,   "rows_loaded": 4058,   "rows_rejected": 8,  "status": "SUCCESS"},
+    {"load_id": 27, "refresh_id": 2, "source_key": "delivery",      "file_mb": 0.012,   "duration_s": 0.283,  "rows_read": 27,     "rows_loaded": 27,     "rows_rejected": 0,  "status": "SUCCESS"},
+    {"load_id": 28, "refresh_id": 2, "source_key": "iot",           "file_mb": 2.105,   "duration_s": 0.819,  "rows_read": 8205,   "rows_loaded": 8189,   "rows_rejected": 16, "status": "SUCCESS"}
+  ],
+  "stream_runs": [
+    {"load_id": 22, "refresh_id": 1, "events_sent": 7114, "events_loaded": 7086, "events_malformed": 28, "events_dropped": 0, "duration_s": 21.87, "throughput_eps": 324.0, "avg_latency_s": 0.0728, "p95_latency_s": 0.1142},
+    {"load_id": 29, "refresh_id": 2, "events_sent": 7081, "events_loaded": 7053, "events_malformed": 28, "events_dropped": 0, "duration_s": 18.97, "throughput_eps": 371.8, "avg_latency_s": 0.0820, "p95_latency_s": 0.1172}
+  ],
+  "rejected_rows": [
+    {"refresh_id": 1, "source_key": "hospital",  "reason": "negative quantity", "n": 1},
+    {"refresh_id": 1, "source_key": "hospital",  "reason": "null MedicineID (SKU)", "n": 1},
+    {"refresh_id": 1, "source_key": "iot",       "reason": "null primary key SensorReadingID", "n": 17},
+    {"refresh_id": 1, "source_key": "sales",     "reason": "invalid date in SalesDate", "n": 7},
+    {"refresh_id": 1, "source_key": "sales",     "reason": "null MedicineID (SKU)", "n": 7},
+    {"refresh_id": 1, "source_key": "sales",     "reason": "price <= 0", "n": 14},
+    {"refresh_id": 1, "source_key": "warehouse", "reason": "null primary key InventorySnapshotID", "n": 8},
+    {"refresh_id": 2, "source_key": "hospital",  "reason": "negative quantity", "n": 1},
+    {"refresh_id": 2, "source_key": "hospital",  "reason": "null MedicineID (SKU)", "n": 1},
+    {"refresh_id": 2, "source_key": "iot",       "reason": "null primary key SensorReadingID", "n": 16},
+    {"refresh_id": 2, "source_key": "sales",     "reason": "invalid date in SalesDate", "n": 7},
+    {"refresh_id": 2, "source_key": "sales",     "reason": "null MedicineID (SKU)", "n": 7},
+    {"refresh_id": 2, "source_key": "sales",     "reason": "price <= 0", "n": 14},
+    {"refresh_id": 2, "source_key": "warehouse", "reason": "null primary key InventorySnapshotID", "n": 8}
+  ],
+  "query_performance": {
+    "_note": "Average over all logged runs (each query x5 per query-layer run; 4 query-layer runs: refresh 0 twice, 1, 2). 0 failures.",
+    "per_widget": [
+      {"widget": "kpi_cards",                       "base_ms": 17.029, "optimized_ms": 3.360,   "runs": 40},
+      {"widget": "forecast_vs_actual",              "base_ms": 14.698, "optimized_ms": 12.082,  "runs": 40},
+      {"widget": "monthly_revenue_trend",           "base_ms": 13.887, "optimized_ms": 3.195,   "runs": 40},
+      {"widget": "channel_revenue_margin",          "base_ms": 11.287, "optimized_ms": 3.718,   "runs": 40},
+      {"widget": "top10_fast_moving",               "base_ms": 10.439, "optimized_ms": 5.502,   "runs": 40},
+      {"widget": "bottom10_slow_moving_cold_chain", "base_ms": 6.999,  "optimized_ms": 2.961,   "runs": 40},
+      {"widget": "unfulfilled_demand_by_hospital",  "base_ms": 6.936,  "optimized_ms": 5.424,   "runs": 40},
+      {"widget": "sales_vs_hospital_demand",        "base_ms": 6.632,  "optimized_ms": 5.216,   "runs": 40},
+      {"widget": "latest_month_partition_scan",     "base_ms": 5.112,  "optimized_ms": 205.348, "runs": 40}
+    ],
+    "per_refresh": [
+      {"refresh_id": 0, "queries": 180, "base_ms": 7.657,  "optimized_ms": 23.011, "failed": 0},
+      {"refresh_id": 1, "queries": 90,  "base_ms": 14.722, "optimized_ms": 34.832, "failed": 0},
+      {"refresh_id": 2, "queries": 90,  "base_ms": 11.305, "optimized_ms": 28.837, "failed": 0}
+    ]
+  },
+  "storage_after_refresh_2": {
+    "staging_postgres_rows": 974852, "staging_postgres_mb": 479.8, "postgres_database_mb": 488.7,
+    "mart_duckdb_rows": 577746, "mart_duckdb_mb": 71.1,
+    "staging_rows_by_domain": {"sales": 514139, "iot": 309851, "warehouse": 120303, "hospital": 28724, "delivery": 1053, "manufacturing": 593, "master": 189}
+  },
+  "mart_after_each_refresh": [
+    {"refresh_id": 0, "fact_sales": 500000, "fact_hospital_demand": 27216, "dim_medicine_rows": 63},
+    {"refresh_id": 1, "fact_sales": 507086, "fact_hospital_demand": 27970, "dim_medicine_rows": 67},
+    {"refresh_id": 2, "fact_sales": 514139, "fact_hospital_demand": 28724, "dim_medicine_rows": 71}
+  ]
+}
