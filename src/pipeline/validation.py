@@ -90,7 +90,7 @@ def validate(df: pd.DataFrame, source_key: str, table: str, pk: list[str],
         qty_cols = [c for c in df.columns if c.endswith("Packs")]
         neg = np.zeros(len(df), dtype=bool)
         for c in qty_cols:
-            neg |= (df[c] < 0).fillna(False).to_numpy()
+            neg |= (df[c] < 0).fillna(False).astype(bool).to_numpy()
         flag(pd.Series(neg, index=df.index), "negative quantity")
     elif source_key == "master":
         flag(~(df["RecommendedRetailPriceUSD"] > 0), "retail price <= 0")
