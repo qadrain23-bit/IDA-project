@@ -15,7 +15,10 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from pipeline.config import SOURCE_DIR, SOURCES  # noqa: E402
 
-stats = {s["refresh_id"]: s for s in json.loads((ROOT / "data/generated/generation_stats.json").read_text())}
+import os
+STATS_PATH = Path(os.getenv("GEN_STATS", ROOT / "data/generated/generation_stats.json"))
+stats = {s["refresh_id"]: s for s in json.loads(STATS_PATH.read_text())}
+RUN = json.loads((ROOT / "docs" / "laptop_run_results.json").read_text())   # real laptop run
 r1, r2 = stats[1], stats[2]
 
 ss = getSampleStyleSheet()
@@ -66,6 +69,9 @@ jan25 = con.execute(f"""SELECT count(*) FROM read_csv('{SOURCE_DIR / SOURCES['sa
 
 bad1 = sum(v.get("malformed_injected", 0) or 0 for v in r1["files"].values())
 bad2 = sum(v.get("malformed_injected", 0) or 0 for v in r2["files"].values())
+rej1 = sum(r["n"] for r in RUN["rejected_rows"] if r["refresh_id"] == 1)
+rej2 = sum(r["n"] for r in RUN["rejected_rows"] if r["refresh_id"] == 2)
+st1, st2 = RUN["stream_runs"]
 
 story = [
     Paragraph("Data Generation (Oversampling) Methodology - Phase 1, Sales &amp; Demand Intelligence", h1),
@@ -110,12 +116,15 @@ story = [
     Paragraph("4. Deliberately broken rows (to test validation)", h2),
     Paragraph(f"About 0.4% of sales events, 0.3% of hospital rows and 0.2% of other rows are corrupted on purpose: price set to "
               f"0 or negative, missing MedicineID, impossible date (2026-13-45), negative quantity, missing primary key. "
-              f"Injected: {bad1} rows in refresh 1 and {bad2} in refresh 2. In the real run the validation step rejected "
-              f"exactly these rows (they are stored in <font face='Courier'>staging.rejected_rows</font> with the reason) "
-              f"and they show up on the ingestion dashboards.", body),
+              f"Injected: {bad1} rows in refresh 1 and {bad2} in refresh 2. In our pipeline run on the team laptop the "
+              f"validation step rejected {rej1} and {rej2} rows - exactly the injected ones - and no valid row was rejected. "
+              f"They are stored in <font face='Courier'>staging.rejected_rows</font> with the reason and show up on the "
+              f"ingestion dashboards.", body),
     Paragraph("5. Where the data goes", h2),
     Paragraph("Sales (POS transactions) go to <font face='Courier'>data/stream_in/</font> and are replayed as a live event "
-              "stream (micro-batches of 50 events, about 400-600 events/second) through the ingestion API. The other six "
+              f"stream (micro-batches of 50 events) through the ingestion API. On the team laptop this ran at "
+              f"{st1['throughput_eps']:.0f} events/second in refresh 1 and {st2['throughput_eps']:.0f} in refresh 2, with "
+              f"{st1['avg_latency_s']:.2f}-{st2['avg_latency_s']:.2f} s average delay per event and 0 dropped events. The other six "
               "files go to <font face='Courier'>data/landing/</font>, where the file-watcher picks them up for batch "
               "ingestion. A copy of everything generated is kept in <font face='Courier'>data/generated/</font> with "
               "<font face='Courier'>generation_stats.json</font>.", body),

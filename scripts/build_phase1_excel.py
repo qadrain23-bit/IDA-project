@@ -10,14 +10,13 @@ import sys
 from pathlib import Path
 
 import duckdb
-import psycopg2
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-from pipeline.config import DUCKDB_PATH, PG  # noqa: E402
+from pipeline.config import DUCKDB_PATH  # noqa: E402
 from pipeline.queries import QUERIES, results  # noqa: E402
 
 FONT = "Arial"
@@ -27,8 +26,9 @@ THIN = Side(style="thin", color="C8C8C8")
 BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 
 wb = Workbook()
-pg = psycopg2.connect(**PG)
-cur = pg.cursor()
+# Monitoring numbers come from the real run on the team laptop (docs/laptop_run_results.json);
+# KPI results are read from the DuckDB mart (same data on every machine: the generator is seeded).
+RUN = json.loads((ROOT / "docs" / "laptop_run_results.json").read_text())
 duck = duckdb.connect(str(DUCKDB_PATH), read_only=True)
 
 
@@ -77,7 +77,8 @@ lines = [
     ("Query Performance - average time of each query, star-schema version vs optimized version", False, 10),
     ("", False, 10),
     ("Assumption: the project plan does not define the content of 'Excel file Phase 1'; this is our interpretation.", False, 9),
-    ("All numbers come from the pipeline run (Postgres ops/staging schemas and the DuckDB mart), not typed by hand.", False, 9),
+    ("Monitoring numbers (loads, rejects, query times) are from the real run on the team laptop (Docker Desktop, 26 Nov 2026);", False, 9),
+    ("KPI results are read from the DuckDB mart. Nothing is typed by hand.", False, 9),
 ]
 for i, (t, b, s) in enumerate(lines, 1):
     ws.cell(i, 1, t).font = Font(name=FONT, bold=b, size=s)
@@ -143,8 +144,9 @@ sheet("Source-to-Target", ["Source file", "Source column(s)", "Target table", "T
       {1: 26, 2: 48, 3: 20, 4: 30, 5: 55})
 
 # ------------------------------------------------------------------ 5. Validation rules
-cur.execute("SELECT source_key, reason, count(*) FROM staging.rejected_rows GROUP BY 1, 2 ORDER BY 1, 3 DESC")
-rej = {(a, b): c for a, b, c in cur.fetchall()}
+rej = {}
+for r in RUN["rejected_rows"]:
+    rej[(r["source_key"], r["reason"])] = rej.get((r["source_key"], r["reason"]), 0) + r["n"]
 rules = [
     ("all 7 files", "Primary key not null", "null primary key"),
     ("all 7 files", "Every date / timestamp parses (YYYY-MM-DD)", "invalid date"),
@@ -164,22 +166,21 @@ for scope, rule, match in rules:
     vrows.append([scope, rule, match, n])
 ws, r0 = sheet("Validation Rules", ["Applies to", "Rule", "Reason text stored in staging.rejected_rows", "Rows rejected (real run)"],
                vrows, {1: 14, 2: 55, 3: 36, 4: 16},
-               note="Rejected rows are not loaded; they are kept with the reason in staging.rejected_rows. Counts are from the initial load + 2 refreshes.")
+               note="Rejected rows are not loaded; they are kept with the reason in staging.rejected_rows. Counts are from the laptop run (initial load + 2 refreshes).")
 last = r0 + len(vrows)
 ws.cell(last + 1, 3, "Total rejected").font = Font(name=FONT, bold=True, size=9)
 ws.cell(last + 1, 4, f"=SUM(D{r0 + 1}:D{last})").font = Font(name=FONT, bold=True, size=9)
 
 # ------------------------------------------------------------------ 6. Refresh log
-cur.execute("""SELECT refresh_id, source_key, file_name, rows_read, rows_loaded, rows_rejected, duration_s, 'batch'
-               FROM ops.batch_load_log
-               UNION ALL
-               SELECT refresh_id, source_key, file_name, events_sent, events_loaded, events_malformed, duration_s, 'stream'
-               FROM ops.stream_run ORDER BY 1, 2""")
-log = [list(r) for r in cur.fetchall()]
-log = [[r[0], r[1], r[2], r[3], r[4], r[5], float(r[6]), r[7]] for r in log]
-ws, r0 = sheet("Refresh Log", ["Refresh", "Source", "File", "Rows read", "Rows loaded", "Rows rejected", "Load time (s)",
-                               "Path", "Reject rate"], log, {1: 9, 2: 14, 3: 44, 4: 12, 5: 12, 6: 12, 7: 12, 8: 9, 9: 11},
-               note="Refresh 0 = initial history (2023-2025). Refresh 1 = Jan 2026, Refresh 2 = Feb 2026. Reject rate = rejected / read.")
+log = [[b["refresh_id"], b["source_key"], b["status"], b["rows_read"] or 0, b["rows_loaded"] or 0, b["rows_rejected"] or 0,
+        b["duration_s"], "batch"] for b in RUN["batch_loads"]]
+log += [[s_["refresh_id"], "sales", "SUCCESS", s_["events_sent"], s_["events_loaded"], s_["events_malformed"],
+         s_["duration_s"], "stream"] for s_ in RUN["stream_runs"]]
+log.sort(key=lambda r: (r[0], r[7], r[1]))
+ws, r0 = sheet("Refresh Log", ["Refresh", "Source", "Status", "Rows read", "Rows loaded", "Rows rejected", "Load time (s)",
+                               "Path", "Reject rate"], log, {1: 9, 2: 14, 3: 12, 4: 12, 5: 12, 6: 12, 7: 12, 8: 9, 9: 11},
+               note="Laptop run. Refresh 0 = initial history (2023-2025), 1 = Jan 2026, 2 = Feb 2026. The 3 FAILED hospital "
+                    "loads in refresh 0 came from a pandas-version bug that was then fixed; the file was re-loaded.")
 for i in range(r0 + 1, r0 + 1 + len(log)):
     c = ws.cell(i, 9, f"=IF(D{i}=0,0,F{i}/D{i})")
     c.number_format = "0.00%"
@@ -252,17 +253,14 @@ for yr, f, cns, u in fva:
 ws.cell(row + 1, 1, "2026 = January and February only (the two generated refresh months).").font = Font(name=FONT, italic=True, size=8)
 
 # ------------------------------------------------------------------ 8. Query performance
-cur.execute("""SELECT widget, round(avg(duration_ms) FILTER (WHERE variant = 'base'), 3),
-                      round(avg(duration_ms) FILTER (WHERE variant = 'optimized'), 3), count(*)
-               FROM ops.query_log WHERE status = 'SUCCESS' GROUP BY 1 ORDER BY 2 DESC""")
-qp = [[w, float(b), float(o), n] for w, b, o, n in cur.fetchall()]
+qp = [[w["widget"], w["base_ms"], w["optimized_ms"], w["runs"]] for w in RUN["query_performance"]["per_widget"]]
 ws, r0 = sheet("Query Performance", ["Dashboard widget / query", "Avg ms - star schema joins", "Avg ms - optimized",
                                      "Runs logged", "Speed-up (x)", "Optimization used"],
                [r + [None, None] for r in qp], {1: 34, 2: 16, 3: 16, 4: 11, 5: 12, 6: 60},
-               note="Each query runs 5 times per refresh (3 refreshes). Optimized = pre-aggregated summary tables, date-sorted fact "
-                    "(zone maps), ART indexes, or year/month parquet partitions. Speed-up = star-schema time / optimized time; "
-                    "below 1 means the optimization did not help at this data size.")
-how = {"latest_month_partition_scan": "reads only one year/month parquet partition",
+               note="Laptop run: each query 5 times per query-layer run, 4 runs, 0 failures. Optimized = summary tables, date-sorted "
+                    "fact (zone maps), ART indexes, or year/month parquet partitions. Speed-up = star-schema time / optimized time; "
+                    "below 1 means the optimization made it slower on this machine.")
+how = {"latest_month_partition_scan": "parquet partition read - much slower here: reading parquet from a Windows folder mounted into Docker is slow",
        "unfulfilled_demand_by_hospital": "agg_demand_monthly (fact is already small: 28k rows)"}
 for i in range(r0 + 1, r0 + 1 + len(qp)):
     c = ws.cell(i, 5, f"=IF(C{i}=0,0,B{i}/C{i})")
